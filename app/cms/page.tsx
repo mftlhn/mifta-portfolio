@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   defaultPortfolioContent,
   hydratePortfolioContent,
@@ -12,6 +13,9 @@ type CmsFormState = PortfolioContent;
 type EditableTextField = "fullName" | "role" | "location" | "summary" | "skills" | "contactEmail";
 
 export default function CmsPage() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [formState, setFormState] = useState<CmsFormState>(defaultPortfolioContent);
   const [projectsJson, setProjectsJson] = useState(JSON.stringify(defaultPortfolioContent.projects, null, 2));
   const [workExperiencesJson, setWorkExperiencesJson] = useState(
@@ -22,6 +26,14 @@ export default function CmsPage() {
   const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
+    const sessionToken = sessionStorage.getItem("cms_session_token");
+    if (!sessionToken) {
+      router.push("/cms/login");
+      return;
+    }
+    setIsAuthenticated(true);
+    setIsLoading(false);
+
     const controller = new AbortController();
 
     fetch("/api/portfolio", { signal: controller.signal })
@@ -40,7 +52,7 @@ export default function CmsPage() {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [router]);
 
   const updateField = (key: EditableTextField, value: string) => {
     if (key === "skills") {
@@ -102,8 +114,19 @@ export default function CmsPage() {
     setStatusMessage("Form has been reset to default (not saved yet).");
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem("cms_session_token");
+    router.push("/cms/login");
+  };
+
   return (
     <main className="container cms">
+      {isLoading && (
+        <div className="loadingOverlay">
+          <p>Loading...</p>
+        </div>
+      )}
+
       <header className="hero">
         <div>
           <p className="badge">CMS Page</p>
@@ -113,10 +136,17 @@ export default function CmsPage() {
           </p>
           <div className="actions">
             <Link href="/">Back to Portfolio</Link>
+            {isAuthenticated && (
+              <button type="button" onClick={handleLogout} className="logoutButton">
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </header>
 
+      {isAuthenticated && !isLoading && (
+        <>
       <form className="card cmsForm" onSubmit={handleSubmit}>
         <div className="tokenInputWrapper">
           <label htmlFor="cmsToken">CMS Access Token</label>
@@ -212,6 +242,8 @@ export default function CmsPage() {
 
         <p className="statusText">{statusMessage}</p>
       </form>
+        </>
+      )}
     </main>
   );
 }

@@ -346,6 +346,68 @@ textarea:focus {
   background: #f5f2ff;
 }
 
+.loginForm {
+  max-width: 400px;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.loginButton {
+  margin-top: 0.75rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #432dcf;
+  background: #432dcf;
+  color: #ffffff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background-color 150ms ease;
+}
+
+.loginButton:hover:not(:disabled) {
+  background: #321b9f;
+}
+
+.loginButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorMessage {
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  color: #432dcf;
+  font-weight: 600;
+}
+
+.logoutButton {
+  background: #f87171;
+  color: #ffffff;
+  border: 1px solid #f87171;
+}
+
+.logoutButton:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  text-decoration: none;
+}
+
 .statusText {
   min-height: 1.2rem;
   color: #4c35d9;
