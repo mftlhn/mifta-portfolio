@@ -6,7 +6,18 @@ Website portfolio satu halaman untuk Fullstack Web Developer, dibangun dengan Ne
 
 - Halaman portfolio (`/`) berisi profil, daftar project, dan form kirim email.
 - Halaman CMS (`/cms`) untuk mengubah konten portfolio tanpa edit kode.
-- Konten CMS disimpan di `localStorage` browser.
+- Konten CMS disimpan di Supabase agar sinkron antar device.
+- Endpoint update CMS dilindungi dengan token (`CMS_ACCESS_TOKEN`).
+
+## Environment Variables
+
+Buat file `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+CMS_ACCESS_TOKEN=your-strong-random-token
+```
 
 ## Menjalankan Project
 

@@ -5,7 +5,6 @@ import { FormEvent, useEffect, useState } from "react";
 import {
   defaultPortfolioContent,
   hydratePortfolioContent,
-  LOCAL_STORAGE_KEY,
   PortfolioContent
 } from "@/lib/portfolio-data";
 
@@ -18,23 +17,28 @@ export default function CmsPage() {
   const [workExperiencesJson, setWorkExperiencesJson] = useState(
     JSON.stringify(defaultPortfolioContent.workExperiences, null, 2)
   );
+  const [cmsToken, setCmsToken] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
-    const rawContent = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!rawContent) return;
+    const controller = new AbortController();
 
-    try {
-      const parsed = JSON.parse(rawContent) as Partial<PortfolioContent>;
-      const hydrated = hydratePortfolioContent(parsed);
-      setFormState(hydrated);
-      setProjectsJson(JSON.stringify(hydrated.projects, null, 2));
-      setWorkExperiencesJson(JSON.stringify(hydrated.workExperiences, null, 2));
-    } catch {
-      setFormState(defaultPortfolioContent);
-      setProjectsJson(JSON.stringify(defaultPortfolioContent.projects, null, 2));
-      setWorkExperiencesJson(JSON.stringify(defaultPortfolioContent.workExperiences, null, 2));
-    }
+    fetch("/api/portfolio", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Failed to load content.");
+        const data = (await response.json()) as { content?: Partial<PortfolioContent> };
+        const hydrated = hydratePortfolioContent(data.content);
+        setFormState(hydrated);
+        setProjectsJson(JSON.stringify(hydrated.projects, null, 2));
+        setWorkExperiencesJson(JSON.stringify(hydrated.workExperiences, null, 2));
+      })
+      .catch(() => {
+        setFormState(defaultPortfolioContent);
+        setProjectsJson(JSON.stringify(defaultPortfolioContent.projects, null, 2));
+        setWorkExperiencesJson(JSON.stringify(defaultPortfolioContent.workExperiences, null, 2));
+      });
+
+    return () => controller.abort();
   }, []);
 
   const updateField = (key: EditableTextField, value: string) => {
@@ -67,16 +71,34 @@ export default function CmsPage() {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(formState));
-    setStatusMessage("Portfolio content saved successfully.");
+    fetch("/api/portfolio", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-cms-token": cmsToken
+      },
+      body: JSON.stringify({ content: formState })
+    })
+      .then(async (response) => {
+        if (response.status === 401) {
+          setStatusMessage("Unauthorized. Please provide valid CMS token.");
+          return;
+        }
+        if (!response.ok) {
+          setStatusMessage("Failed to save content.");
+          return;
+        }
+
+        setStatusMessage("Portfolio content saved successfully.");
+      })
+      .catch(() => setStatusMessage("Failed to save content."));
   };
 
   const handleReset = () => {
     setFormState(defaultPortfolioContent);
     setProjectsJson(JSON.stringify(defaultPortfolioContent.projects, null, 2));
     setWorkExperiencesJson(JSON.stringify(defaultPortfolioContent.workExperiences, null, 2));
-    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(defaultPortfolioContent));
-    setStatusMessage("Content has been reset to default.");
+    setStatusMessage("Form has been reset to default (not saved yet).");
   };
 
   return (
@@ -95,6 +117,16 @@ export default function CmsPage() {
       </header>
 
       <form className="card cmsForm" onSubmit={handleSubmit}>
+        <label htmlFor="cmsToken">CMS Access Token</label>
+        <input
+          id="cmsToken"
+          type="password"
+          value={cmsToken}
+          onChange={(event) => setCmsToken(event.target.value)}
+          placeholder="Enter your CMS token"
+          required
+        />
+
         <label htmlFor="fullName">Full Name</label>
         <input
           id="fullName"

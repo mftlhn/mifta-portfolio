@@ -5,8 +5,6 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import {
   defaultPortfolioContent,
-  hydratePortfolioContent,
-  LOCAL_STORAGE_KEY,
   PortfolioContent
 } from "@/lib/portfolio-data";
 
@@ -17,15 +15,19 @@ export default function PortfolioPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const rawContent = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!rawContent) return;
+    const controller = new AbortController();
 
-    try {
-      const parsed = JSON.parse(rawContent) as Partial<PortfolioContent>;
-      setContent(hydratePortfolioContent(parsed));
-    } catch {
-      setContent(defaultPortfolioContent);
-    }
+    fetch("/api/portfolio", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Failed to fetch portfolio.");
+        const data = (await response.json()) as { content?: PortfolioContent };
+        setContent(data.content ?? defaultPortfolioContent);
+      })
+      .catch(() => {
+        setContent(defaultPortfolioContent);
+      });
+
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
