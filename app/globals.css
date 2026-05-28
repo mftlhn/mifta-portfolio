@@ -9,6 +9,7 @@ body {
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
   background: linear-gradient(180deg, #f6f7ff 0%, #eef1ff 100%);
   color: #1f2041;
+  overflow-x: hidden;
 }
 
 a {
@@ -348,13 +349,23 @@ textarea:focus {
   .experienceItem.right .experienceCard {
     grid-column: 1;
     justify-self: stretch;
+    width: calc(100% - 3.1rem);
     margin-left: 2.6rem;
-    margin-right: 0;
+    margin-right: 0.5rem;
     transform: translateX(30px);
   }
 
   .timelineDot {
     left: 18px;
     transform: translate(-50%, -50%);
+  }
+
+  .portfolioCard {
+    box-shadow: 6px 6px 0 #242424;
+  }
+
+  .portfolioCard:hover {
+    transform: none;
+    box-shadow: 6px 6px 0 #242424;
   }
 }
