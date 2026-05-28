@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import {
   defaultPortfolioContent,
   hydratePortfolioContent,
@@ -26,6 +27,26 @@ export default function PortfolioPage() {
       setContent(defaultPortfolioContent);
     }
   }, []);
+
+  useEffect(() => {
+    const items = Array.from(document.querySelectorAll<HTMLElement>(".experienceItem"));
+    if (items.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries, currentObserver) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("inView");
+          currentObserver.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    items.forEach((item) => observer.observe(item));
+
+    return () => observer.disconnect();
+  }, [content.workExperiences]);
 
   const mailtoLink = useMemo(() => {
     const subject = encodeURIComponent(`Portfolio Inquiry from ${name || "Visitor"}`);
@@ -95,15 +116,22 @@ export default function PortfolioPage() {
 
       <section className="section" id="experience">
         <h2>Work Experience</h2>
-        <div className="grid experienceGrid">
-          {(content.workExperiences ?? []).map((experience) => (
-            <article key={`${experience.companyName}-${experience.yearRange}`} className="card portfolioCard experienceCard">
-              <h3>{experience.companyName}</h3>
-              <p className="stack">
-                {experience.position} • {experience.yearRange}
-              </p>
-              <p>{experience.jobdesk}</p>
-            </article>
+        <div className="experienceTimeline">
+          {(content.workExperiences ?? []).map((experience, index) => (
+            <div
+              key={`${experience.companyName}-${experience.yearRange}`}
+              className={`experienceItem ${index % 2 === 0 ? "left" : "right"}`}
+              style={{ "--reveal-delay": `${index * 120}ms` } as CSSProperties}
+            >
+              <span className="timelineDot" aria-hidden="true" />
+              <article className="card portfolioCard experienceCard">
+                <h3>{experience.companyName}</h3>
+                <p className="stack">
+                  {experience.position} • {experience.yearRange}
+                </p>
+                <p>{experience.jobdesk}</p>
+              </article>
+            </div>
           ))}
         </div>
       </section>
@@ -135,6 +163,10 @@ export default function PortfolioPage() {
           <button type="submit">Send Email</button>
         </form>
       </section>
+
+      <footer className="footer">
+        <p>© {new Date().getFullYear()} {content.fullName}. All rights reserved.</p>
+      </footer>
     </main>
   );
 }

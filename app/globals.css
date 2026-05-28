@@ -166,12 +166,79 @@ button:hover {
   background: #e9d5ff;
 }
 
-.experienceGrid .experienceCard:nth-child(2n + 1) {
+.experienceItem:nth-child(2n + 1) .experienceCard {
   background: #fde68a;
 }
 
-.experienceGrid .experienceCard:nth-child(2n) {
+.experienceItem:nth-child(2n) .experienceCard {
   background: #bfdbfe;
+}
+
+.experienceTimeline {
+  position: relative;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.experienceTimeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+  background: #3b59f0;
+}
+
+.experienceItem {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 180px;
+}
+
+.experienceItem .experienceCard {
+  opacity: 0;
+  transition: opacity 520ms ease, transform 520ms ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.experienceItem.left .experienceCard {
+  transform: translateX(-48px);
+}
+
+.experienceItem.right .experienceCard {
+  transform: translateX(48px);
+}
+
+.experienceItem.inView .experienceCard {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.experienceItem.left .experienceCard {
+  grid-column: 1;
+  justify-self: end;
+  margin-right: 2.2rem;
+}
+
+.experienceItem.right .experienceCard {
+  grid-column: 2;
+  justify-self: start;
+  margin-left: 2.2rem;
+}
+
+.timelineDot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: #3b59f0;
+  border: 2px solid #eaf0ff;
 }
 
 .skills {
@@ -248,6 +315,15 @@ textarea:focus {
   margin: 0.3rem 0 0;
 }
 
+.footer {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid #d8d1ff;
+  text-align: center;
+  color: #575577;
+  font-weight: 600;
+}
+
 @media (max-width: 860px) {
   .heroCard {
     grid-template-columns: 1fr;
@@ -256,5 +332,29 @@ textarea:focus {
   .heroImageWrap {
     width: 180px;
     height: 180px;
+  }
+
+  .experienceTimeline::before {
+    left: 18px;
+    transform: none;
+  }
+
+  .experienceItem {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .experienceItem.left .experienceCard,
+  .experienceItem.right .experienceCard {
+    grid-column: 1;
+    justify-self: stretch;
+    margin-left: 2.6rem;
+    margin-right: 0;
+    transform: translateX(30px);
+  }
+
+  .timelineDot {
+    left: 18px;
+    transform: translate(-50%, -50%);
   }
 }
