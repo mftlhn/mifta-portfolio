@@ -143,7 +143,9 @@ button:hover {
 .portfolioCard {
   border: 2px solid #242424;
   box-shadow: 9px 9px 0 #242424;
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .portfolioCard:hover {
@@ -201,7 +203,9 @@ button:hover {
 
 .experienceItem .experienceCard {
   opacity: 0;
-  transition: opacity 520ms ease, transform 520ms ease;
+  transition:
+    opacity 520ms ease,
+    transform 520ms ease;
   transition-delay: var(--reveal-delay, 0ms);
 }
 
@@ -308,6 +312,100 @@ textarea:focus {
   margin-top: 0.75rem;
   display: flex;
   gap: 0.75rem;
+}
+
+.tokenInputWrapper {
+  margin-bottom: 0.6rem;
+}
+
+.tokenInputContainer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.tokenInputContainer input {
+  flex: 1;
+  margin: 0;
+}
+
+.toggleTokenButton {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #dfd8ff;
+  background: #ffffff;
+  color: #432dcf;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 150ms ease;
+}
+
+.toggleTokenButton:hover {
+  background: #f5f2ff;
+}
+
+.loginForm {
+  max-width: 400px;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.loginButton {
+  margin-top: 0.75rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #432dcf;
+  background: #432dcf;
+  color: #ffffff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background-color 150ms ease;
+}
+
+.loginButton:hover:not(:disabled) {
+  background: #321b9f;
+}
+
+.loginButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorMessage {
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  color: #432dcf;
+  font-weight: 600;
+}
+
+.logoutButton {
+  background: #f87171;
+  color: #ffffff;
+  border: 1px solid #f87171;
+}
+
+.logoutButton:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  text-decoration: none;
 }
 
 .statusText {

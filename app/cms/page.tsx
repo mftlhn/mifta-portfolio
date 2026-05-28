@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   defaultPortfolioContent,
   hydratePortfolioContent,
@@ -12,15 +13,27 @@ type CmsFormState = PortfolioContent;
 type EditableTextField = "fullName" | "role" | "location" | "summary" | "skills" | "contactEmail";
 
 export default function CmsPage() {
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [formState, setFormState] = useState<CmsFormState>(defaultPortfolioContent);
   const [projectsJson, setProjectsJson] = useState(JSON.stringify(defaultPortfolioContent.projects, null, 2));
   const [workExperiencesJson, setWorkExperiencesJson] = useState(
     JSON.stringify(defaultPortfolioContent.workExperiences, null, 2)
   );
   const [cmsToken, setCmsToken] = useState("");
+  const [showToken, setShowToken] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
+    const sessionToken = sessionStorage.getItem("cms_session_token");
+    if (!sessionToken) {
+      router.push("/cms/login");
+      return;
+    }
+    setIsAuthenticated(true);
+    setIsLoading(false);
+
     const controller = new AbortController();
 
     fetch("/api/portfolio", { signal: controller.signal })
@@ -39,7 +52,7 @@ export default function CmsPage() {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [router]);
 
   const updateField = (key: EditableTextField, value: string) => {
     if (key === "skills") {
@@ -101,8 +114,19 @@ export default function CmsPage() {
     setStatusMessage("Form has been reset to default (not saved yet).");
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem("cms_session_token");
+    router.push("/cms/login");
+  };
+
   return (
     <main className="container cms">
+      {isLoading && (
+        <div className="loadingOverlay">
+          <p>Loading...</p>
+        </div>
+      )}
+
       <header className="hero">
         <div>
           <p className="badge">CMS Page</p>
@@ -112,20 +136,39 @@ export default function CmsPage() {
           </p>
           <div className="actions">
             <Link href="/">Back to Portfolio</Link>
+            {isAuthenticated && (
+              <button type="button" onClick={handleLogout} className="logoutButton">
+                Logout
+              </button>
+            )}
           </div>
         </div>
       </header>
 
+      {isAuthenticated && !isLoading && (
+        <>
       <form className="card cmsForm" onSubmit={handleSubmit}>
-        <label htmlFor="cmsToken">CMS Access Token</label>
-        <input
-          id="cmsToken"
-          type="password"
-          value={cmsToken}
-          onChange={(event) => setCmsToken(event.target.value)}
-          placeholder="Enter your CMS token"
-          required
-        />
+        <div className="tokenInputWrapper">
+          <label htmlFor="cmsToken">CMS Access Token</label>
+          <div className="tokenInputContainer">
+            <input
+              id="cmsToken"
+              type={showToken ? "text" : "password"}
+              value={cmsToken}
+              onChange={(event) => setCmsToken(event.target.value)}
+              placeholder="Enter your CMS token"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowToken(!showToken)}
+              className="toggleTokenButton"
+              title={showToken ? "Hide token" : "Show token"}
+            >
+              {showToken ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
 
         <label htmlFor="fullName">Full Name</label>
         <input
@@ -199,6 +242,8 @@ export default function CmsPage() {
 
         <p className="statusText">{statusMessage}</p>
       </form>
+        </>
+      )}
     </main>
   );
 }
