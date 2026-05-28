@@ -143,7 +143,9 @@ button:hover {
 .portfolioCard {
   border: 2px solid #242424;
   box-shadow: 9px 9px 0 #242424;
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .portfolioCard:hover {
@@ -201,7 +203,9 @@ button:hover {
 
 .experienceItem .experienceCard {
   opacity: 0;
-  transition: opacity 520ms ease, transform 520ms ease;
+  transition:
+    opacity 520ms ease,
+    transform 520ms ease;
   transition-delay: var(--reveal-delay, 0ms);
 }
 

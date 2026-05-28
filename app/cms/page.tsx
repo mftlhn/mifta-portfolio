@@ -18,7 +18,6 @@ export default function CmsPage() {
   const [workExperiencesJson, setWorkExperiencesJson] = useState(
     JSON.stringify(defaultPortfolioContent.workExperiences, null, 2)
   );
-  const [cmsToken, setCmsToken] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -103,14 +102,14 @@ export default function CmsPage() {
     fetch("/api/portfolio", {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json",
-        "x-cms-token": cmsToken
+        "Content-Type": "application/json"
       },
+      credentials: "include",
       body: JSON.stringify({ content: formState })
     })
       .then(async (response) => {
         if (response.status === 401) {
-          setStatusMessage("Unauthorized. Please provide valid CMS token.");
+          setStatusMessage("Unauthorized. Please login again.");
           return;
         }
         if (!response.ok) {
@@ -171,16 +170,6 @@ export default function CmsPage() {
       </header>
 
       <form className="card cmsForm" onSubmit={handleSubmit}>
-        <label htmlFor="cmsToken">CMS Access Token</label>
-        <input
-          id="cmsToken"
-          type="password"
-          value={cmsToken}
-          onChange={(event) => setCmsToken(event.target.value)}
-          placeholder="Enter your CMS token"
-          required
-        />
-
         <label htmlFor="fullName">Full Name</label>
         <input
           id="fullName"

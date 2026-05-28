@@ -4,7 +4,6 @@ import { defaultPortfolioContent, hydratePortfolioContent, PortfolioContent } fr
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const CMS_ACCESS_TOKEN = process.env.CMS_ACCESS_TOKEN;
 
 function getSupabaseClient() {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
@@ -38,8 +37,8 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const token = request.headers.get("x-cms-token");
-    if (!CMS_ACCESS_TOKEN || token !== CMS_ACCESS_TOKEN) {
+    const sessionCookie = request.cookies.get("cms_session");
+    if (!sessionCookie || !sessionCookie.value) {
       return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
     }
 
