@@ -18,6 +18,7 @@ export default function CmsPage() {
     JSON.stringify(defaultPortfolioContent.workExperiences, null, 2)
   );
   const [cmsToken, setCmsToken] = useState("");
+  const [showToken, setShowToken] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
@@ -117,15 +118,27 @@ export default function CmsPage() {
       </header>
 
       <form className="card cmsForm" onSubmit={handleSubmit}>
-        <label htmlFor="cmsToken">CMS Access Token</label>
-        <input
-          id="cmsToken"
-          type="password"
-          value={cmsToken}
-          onChange={(event) => setCmsToken(event.target.value)}
-          placeholder="Enter your CMS token"
-          required
-        />
+        <div className="tokenInputWrapper">
+          <label htmlFor="cmsToken">CMS Access Token</label>
+          <div className="tokenInputContainer">
+            <input
+              id="cmsToken"
+              type={showToken ? "text" : "password"}
+              value={cmsToken}
+              onChange={(event) => setCmsToken(event.target.value)}
+              placeholder="Enter your CMS token"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowToken(!showToken)}
+              className="toggleTokenButton"
+              title={showToken ? "Hide token" : "Show token"}
+            >
+              {showToken ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
 
         <label htmlFor="fullName">Full Name</label>
         <input
