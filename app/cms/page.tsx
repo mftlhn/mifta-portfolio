@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   defaultPortfolioContent,
   hydratePortfolioContent,
@@ -19,8 +20,36 @@ export default function CmsPage() {
   );
   const [cmsToken, setCmsToken] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
+    // Check if user has valid session cookie
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/check", {
+          method: "GET",
+          credentials: "include"
+        });
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          router.push("/login");
+        }
+      } catch {
+        router.push("/login");
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
+
+  useEffect(() => {
+    if (!isAuthenticated || isCheckingAuth) return;
+
     const controller = new AbortController();
 
     fetch("/api/portfolio", { signal: controller.signal })
@@ -39,7 +68,7 @@ export default function CmsPage() {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [isAuthenticated, isCheckingAuth]);
 
   const updateField = (key: EditableTextField, value: string) => {
     if (key === "skills") {
@@ -101,6 +130,28 @@ export default function CmsPage() {
     setStatusMessage("Form has been reset to default (not saved yet).");
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+      router.push("/login");
+    } catch {
+      setStatusMessage("Failed to logout.");
+    }
+  };
+
+  if (isCheckingAuth || !isAuthenticated) {
+    return (
+      <main className="container">
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <p>Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="container cms">
       <header className="hero">
@@ -112,6 +163,9 @@ export default function CmsPage() {
           </p>
           <div className="actions">
             <Link href="/">Back to Portfolio</Link>
+            <button onClick={handleLogout} className="logoutBtn">
+              Logout
+            </button>
           </div>
         </div>
       </header>
