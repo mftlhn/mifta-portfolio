@@ -10,6 +10,7 @@ import {
 } from "@/lib/portfolio-data";
 
 type CmsFormState = PortfolioContent;
+type EditableTextField = "fullName" | "role" | "location" | "summary" | "skills" | "contactEmail";
 
 export default function CmsPage() {
   const [formState, setFormState] = useState<CmsFormState>(defaultPortfolioContent);
@@ -36,7 +37,7 @@ export default function CmsPage() {
     }
   }, []);
 
-  const updateField = (key: keyof PortfolioContent, value: string) => {
+  const updateField = (key: EditableTextField, value: string) => {
     if (key === "skills") {
       setFormState((prev) => ({ ...prev, skills: value.split(",").map((skill) => skill.trim()).filter(Boolean) }));
       return;
