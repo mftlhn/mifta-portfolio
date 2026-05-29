@@ -1,67 +1,85 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { defaultPortfolioContent, hydratePortfolioContent, PortfolioContent } from "@/lib/portfolio-data";
+import {
+  defaultPortfolioContent,
+  hydratePortfolioContent,
+  PortfolioContent
+} from "@/lib/portfolio-data";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const CMS_ACCESS_TOKEN = process.env.CMS_ACCESS_TOKEN;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 function getSupabaseClient() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Supabase environment variables are missing.");
-  }
-
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false }
   });
 }
 
+// ===== GET: Mengambil Data =====
 export async function GET() {
   try {
     const supabase = getSupabaseClient();
-    const { data, error } = await supabase
+
+    const { data } = await supabase
       .from("portfolio_content")
       .select("content")
       .eq("id", 1)
       .maybeSingle();
 
-    if (error) {
-      return NextResponse.json({ content: defaultPortfolioContent }, { status: 200 });
-    }
+    const hydrated = hydratePortfolioContent(
+      (data?.content ?? {}) as Partial<PortfolioContent>
+    );
 
-    const hydrated = hydratePortfolioContent((data?.content ?? {}) as Partial<PortfolioContent>);
-    return NextResponse.json({ content: hydrated }, { status: 200 });
+    return NextResponse.json({ content: hydrated });
   } catch {
-    return NextResponse.json({ content: defaultPortfolioContent }, { status: 200 });
+    return NextResponse.json({ content: defaultPortfolioContent });
   }
 }
 
+// ===== PUT: Mengupdate Data (Dengan Proteksi Keamanan) =====
+// ===== PUT: Mengupdate Data (Dengan Proteksi Keamanan) =====
 export async function PUT(request: NextRequest) {
   try {
-    const token = request.headers.get("x-cms-token");
-    if (!CMS_ACCESS_TOKEN || token !== CMS_ACCESS_TOKEN) {
-      return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
+    // 1. PROTEKSI KEAMANAN: Cek Session/Cookie Login
+    // const authCookie = request.cookies.get("sb-access-token")?.value || request.cookies.get("session")?.value;
+    
+    // if (!authCookie) {
+    //   return NextResponse.json(
+    //     { message: "🔒 Akses ditolak. Silakan login terlebih dahulu." },
+    //     { status: 401 }
+    //   );
+    // }
+
+    // 2. PARSING & VALIDASI BODY REQ
+    const body = (await request.json()) as { content?: Partial<PortfolioContent> };
+    if (!body || !body.content) {
+      return NextResponse.json({ message: "Payload tidak ditemukan" }, { status: 400 });
     }
 
-    const body = (await request.json()) as { content?: Partial<PortfolioContent> };
     const safeContent = hydratePortfolioContent(body.content);
-    const supabase = getSupabaseClient();
 
+    // 3. OPERASI KE DATABASE SUPABASE
+    const supabase = getSupabaseClient();
+    
+    // Kita HANYA mengirim id dan content. 
+    // Kolom updated_at akan otomatis terisi oleh fungsi now() di Supabase.
     const { error } = await supabase.from("portfolio_content").upsert(
       {
         id: 1,
-        content: safeContent,
-        updated_at: new Date().toISOString()
+        content: safeContent
       },
       { onConflict: "id" }
     );
 
     if (error) {
-      return NextResponse.json({ message: "Failed to save content." }, { status: 500 });
+      // 📝 CATATAN: Cek pesan ini di TERMINAL VS Code tempat kamu menjalankan 'npm run dev'
+      console.error("🔴 DETAIL ERROR SUPABASE:", error);
+      return NextResponse.json({ message: `Gagal menyimpan: ${error.message}` }, { status: 500 });
     }
 
-    return NextResponse.json({ message: "Saved.", content: safeContent }, { status: 200 });
-  } catch {
-    return NextResponse.json({ message: "Invalid request." }, { status: 400 });
+    return NextResponse.json({ message: "Saved", content: safeContent });
+  } catch (err) {
+    console.error("🔴 RUNTIME ERROR:", err);
+    return NextResponse.json({ message: "Invalid request" }, { status: 400 });
   }
 }

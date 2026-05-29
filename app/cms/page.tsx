@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   defaultPortfolioContent,
@@ -10,248 +10,384 @@ import {
 } from "@/lib/portfolio-data";
 
 type CmsFormState = PortfolioContent;
-type EditableTextField = "fullName" | "role" | "location" | "summary" | "skills" | "contactEmail";
+
+type EditableTextField =
+  | "fullName"
+  | "role"
+  | "location"
+  | "summary"
+  | "skills"
+  | "contactEmail";
 
 export default function CmsPage() {
-  const [formState, setFormState] = useState<CmsFormState>(defaultPortfolioContent);
-  const [projectsJson, setProjectsJson] = useState(JSON.stringify(defaultPortfolioContent.projects, null, 2));
-  const [workExperiencesJson, setWorkExperiencesJson] = useState(
-    JSON.stringify(defaultPortfolioContent.workExperiences, null, 2)
+  const [formState, setFormState] =
+    useState<CmsFormState>(defaultPortfolioContent);
+
+  const [projects, setProjects] = useState(defaultPortfolioContent.projects);
+  const [workExperiences, setWorkExperiences] = useState(
+    defaultPortfolioContent.workExperiences
   );
-  const [cmsToken, setCmsToken] = useState("");
+
   const [statusMessage, setStatusMessage] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
 
+  // ===== AUTH CHECK =====
   useEffect(() => {
-    // Check if user has valid session cookie
     const checkAuth = async () => {
       try {
-        const response = await fetch("/api/auth/check", {
-          method: "GET",
+        const res = await fetch("/api/auth/check", {
           credentials: "include"
         });
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else {
-          router.push("/login");
-        }
+        if (!res.ok) throw new Error();
+        setIsAuthenticated(true);
       } catch {
         router.push("/login");
       } finally {
         setIsCheckingAuth(false);
       }
     };
-
     checkAuth();
   }, [router]);
 
+  // ===== LOAD DATA =====
   useEffect(() => {
     if (!isAuthenticated || isCheckingAuth) return;
 
-    const controller = new AbortController();
-
-    fetch("/api/portfolio", { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Failed to load content.");
-        const data = (await response.json()) as { content?: Partial<PortfolioContent> };
+    fetch("/api/portfolio")
+      .then(res => res.json())
+      .then(data => {
         const hydrated = hydratePortfolioContent(data.content);
         setFormState(hydrated);
-        setProjectsJson(JSON.stringify(hydrated.projects, null, 2));
-        setWorkExperiencesJson(JSON.stringify(hydrated.workExperiences, null, 2));
+        setProjects(hydrated.projects || []);
+        setWorkExperiences(hydrated.workExperiences || []);
       })
       .catch(() => {
         setFormState(defaultPortfolioContent);
-        setProjectsJson(JSON.stringify(defaultPortfolioContent.projects, null, 2));
-        setWorkExperiencesJson(JSON.stringify(defaultPortfolioContent.workExperiences, null, 2));
       });
-
-    return () => controller.abort();
   }, [isAuthenticated, isCheckingAuth]);
 
+  // ===== BASIC FIELD UPDATE =====
   const updateField = (key: EditableTextField, value: string) => {
     if (key === "skills") {
-      setFormState((prev) => ({ ...prev, skills: value.split(",").map((skill) => skill.trim()).filter(Boolean) }));
+      setFormState(prev => ({
+        ...prev,
+        skills: value.split(",").map(s => s.trim()).filter(Boolean)
+      }));
       return;
     }
-    setFormState((prev) => ({ ...prev, [key]: value }));
+    setFormState(prev => ({ ...prev, [key]: value }));
   };
 
-  const updateProjects = (rawText: string) => {
+  // ===== PROJECTS =====
+  const addProject = () => {
+    setProjects(prev => [
+      ...prev,
+      {
+        name: "", 
+        description: "",
+        stack: [],
+        demoUrl: "",
+        repoUrl: ""
+      }
+    ]);
+  };
+
+  const updateProject = (i: number, key: string, value: string) => {
+    setProjects(prev =>
+      prev.map((p, idx) =>
+        idx === i
+          ? {
+              ...p,
+              [key]:
+                key === "stack"
+                  ? value.split(",").map(s => s.trim()).filter(Boolean)
+                  : value
+            }
+          : p
+      )
+    );
+  };
+
+  const removeProject = (i: number) => {
+    setProjects(prev => prev.filter((_, idx) => idx !== i));
+  };
+
+  // ===== WORK EXPERIENCES =====
+  const addWork = () => {
+    setWorkExperiences(prev => [
+      ...prev,
+      { companyName: "", yearRange: "", position: "", jobdesk: "" }
+    ]);
+  };
+
+  const updateWork = (i: number, key: string, value: string) => {
+    setWorkExperiences(prev =>
+      prev.map((w, idx) => (idx === i ? { ...w, [key]: value } : w))
+    );
+  };
+
+  const removeWork = (i: number) => {
+    setWorkExperiences(prev => prev.filter((_, idx) => idx !== i));
+  };
+
+  // ===== SUBMIT =====
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     try {
-      const parsed = JSON.parse(rawText) as PortfolioContent["projects"];
-      setFormState((prev) => ({ ...prev, projects: parsed }));
-      setStatusMessage("Project format is valid.");
+      const payload: PortfolioContent = {
+        ...formState,
+        projects,
+        workExperiences
+      };
+
+      const res = await fetch("/api/portfolio", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: payload })
+      });
+
+      if (!res.ok) throw new Error();
+      setStatusMessage("✅ Portfolio saved successfully");
     } catch {
-      setStatusMessage("Invalid project format (use a JSON array).");
+      setStatusMessage("❌ Gagal menyimpan data");
     }
-  };
-
-  const updateWorkExperiences = (rawText: string) => {
-    try {
-      const parsed = JSON.parse(rawText) as PortfolioContent["workExperiences"];
-      setFormState((prev) => ({ ...prev, workExperiences: parsed }));
-      setStatusMessage("Work experience format is valid.");
-    } catch {
-      setStatusMessage("Invalid work experience format (use a JSON array).");
-    }
-  };
-
-  const handleSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    fetch("/api/portfolio", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "x-cms-token": cmsToken
-      },
-      body: JSON.stringify({ content: formState })
-    })
-      .then(async (response) => {
-        if (response.status === 401) {
-          setStatusMessage("Unauthorized. Please provide valid CMS token.");
-          return;
-        }
-        if (!response.ok) {
-          setStatusMessage("Failed to save content.");
-          return;
-        }
-
-        setStatusMessage("Portfolio content saved successfully.");
-      })
-      .catch(() => setStatusMessage("Failed to save content."));
-  };
-
-  const handleReset = () => {
-    setFormState(defaultPortfolioContent);
-    setProjectsJson(JSON.stringify(defaultPortfolioContent.projects, null, 2));
-    setWorkExperiencesJson(JSON.stringify(defaultPortfolioContent.workExperiences, null, 2));
-    setStatusMessage("Form has been reset to default (not saved yet).");
   };
 
   const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include"
-      });
-      router.push("/login");
-    } catch {
-      setStatusMessage("Failed to logout.");
-    }
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+    router.push("/login");
   };
 
   if (isCheckingAuth || !isAuthenticated) {
-    return (
-      <main className="container">
-        <div style={{ textAlign: "center", padding: "2rem" }}>
-          <p>Loading...</p>
-        </div>
-      </main>
-    );
+    return <p style={{ padding: 40, textAlign: "center" }}>Loading...</p>;
   }
 
   return (
     <main className="container cms">
       <header className="hero">
-        <div>
-          <p className="badge">CMS Page</p>
-          <h1>Manage Portfolio</h1>
-          <p className="summary">
-            Update profile, skills, projects, work experience, and contact email for your portfolio page.
-          </p>
-          <div className="actions">
-            <Link href="/">Back to Portfolio</Link>
-            <button onClick={handleLogout} className="logoutBtn">
-              Logout
-            </button>
-          </div>
+        <p className="badge">CMS</p>
+        <h1>Manage Portfolio</h1>
+        <div className="actions">
+          <Link href="/">Back</Link>
+          <button onClick={handleLogout}>Logout</button>
         </div>
       </header>
 
       <form className="card cmsForm" onSubmit={handleSubmit}>
-        <label htmlFor="cmsToken">CMS Access Token</label>
-        <input
-          id="cmsToken"
-          type="password"
-          value={cmsToken}
-          onChange={(event) => setCmsToken(event.target.value)}
-          placeholder="Enter your CMS token"
-          required
-        />
+        {/* === Profile Section === */}
+        <div className="form-section">
+          <h3>Profile Information</h3>
+          
+          <label>
+            <span className="label-text">Full Name</span>
+            <input
+              value={formState.fullName}
+              onChange={e => updateField("fullName", e.target.value)}
+              placeholder="e.g. John Doe"
+              required
+            />
+          </label>
 
-        <label htmlFor="fullName">Full Name</label>
-        <input
-          id="fullName"
-          value={formState.fullName}
-          onChange={(event) => updateField("fullName", event.target.value)}
-          required
-        />
+          <label>
+            <span className="label-text">Role / Title</span>
+            <input
+              value={formState.role}
+              onChange={e => updateField("role", e.target.value)}
+              placeholder="e.g. Fullstack Developer"
+              required
+            />
+          </label>
 
-        <label htmlFor="role">Role</label>
-        <input id="role" value={formState.role} onChange={(event) => updateField("role", event.target.value)} required />
+          <label>
+            <span className="label-text">Location</span>
+            <input
+              value={formState.location}
+              onChange={e => updateField("location", e.target.value)}
+              placeholder="e.g. Jakarta, Indonesia"
+              required
+            />
+          </label>
 
-        <label htmlFor="location">Location</label>
-        <input
-          id="location"
-          value={formState.location}
-          onChange={(event) => updateField("location", event.target.value)}
-          required
-        />
+          <label>
+            <span className="label-text">Professional Summary</span>
+            <textarea
+              value={formState.summary}
+              onChange={e => updateField("summary", e.target.value)}
+              placeholder="Write a short bio or professional summary..."
+              rows={4}
+            />
+          </label>
 
-        <label htmlFor="summary">Profile Summary</label>
-        <textarea
-          id="summary"
-          rows={4}
-          value={formState.summary}
-          onChange={(event) => updateField("summary", event.target.value)}
-          required
-        />
+          <label>
+            <span className="label-text">Skills</span>
+            <input
+              value={formState.skills.join(", ")}
+              onChange={e => updateField("skills", e.target.value)}
+              placeholder="e.g. React, Next.js, Node.js, TypeScript"
+            />
+            <small className="helper-text">
+              💡 Pisahkan setiap keahlian dengan tanda koma (contoh: Python, Django, Docker).
+            </small>
+          </label>
 
-        <label htmlFor="skills">Skills (comma separated)</label>
-        <input
-          id="skills"
-          value={formState.skills.join(", ")}
-          onChange={(event) => updateField("skills", event.target.value)}
-          required
-        />
-
-        <label htmlFor="contactEmail">Contact Email</label>
-        <input
-          id="contactEmail"
-          type="email"
-          value={formState.contactEmail}
-          onChange={(event) => updateField("contactEmail", event.target.value)}
-          required
-        />
-
-        <label htmlFor="projects">Projects (JSON Array)</label>
-        <textarea
-          id="projects"
-          rows={12}
-          value={projectsJson}
-          onChange={(event) => setProjectsJson(event.target.value)}
-          onBlur={(event) => updateProjects(event.target.value)}
-        />
-
-        <label htmlFor="workExperiences">Work Experience (JSON Array)</label>
-        <textarea
-          id="workExperiences"
-          rows={10}
-          value={workExperiencesJson}
-          onChange={(event) => setWorkExperiencesJson(event.target.value)}
-          onBlur={(event) => updateWorkExperiences(event.target.value)}
-        />
-
-        <div className="cmsActions">
-          <button type="submit">Save Changes</button>
-          <button type="button" onClick={handleReset}>
-            Reset to Default
-          </button>
+          <label>
+            <span className="label-text">Contact Email</span>
+            <input
+              type="email"
+              value={formState.contactEmail}
+              onChange={e => updateField("contactEmail", e.target.value)}
+              placeholder="e.g. johndoe@example.com"
+            />
+          </label>
         </div>
 
-        <p className="statusText">{statusMessage}</p>
+        <hr />
+
+        {/* === Projects Section === */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>Projects</h3>
+            <button type="button" className="btn-add" onClick={addProject}>
+              + Add Project
+            </button>
+          </div>
+          
+          <div className="items-grid">
+            {projects.map((p, i) => (
+              <div key={i} className="box card-item">
+                <div className="item-header">
+                  <h4>Project #{i + 1}</h4>
+                  <button type="button" className="btn-remove" onClick={() => removeProject(i)}>
+                    Remove
+                  </button>
+                </div>
+                
+                <label>
+                  <span className="label-text">Project Title</span>
+                  <input
+                    value={p.name}
+                    onChange={e => updateProject(i, "name", e.target.value)}
+                    placeholder="e.g. E-Commerce Platform"
+                  />
+                </label>
+
+                <label>
+                  <span className="label-text">Description</span>
+                  <textarea
+                    value={p.description}
+                    onChange={e => updateProject(i, "description", e.target.value)}
+                    placeholder="Describe what this project is about..."
+                    rows={3}
+                  />
+                </label>
+
+                <label>
+                  <span className="label-text">Tech Stack</span>
+                  <input
+                    value={p.stack.join(", ")}
+                    onChange={e => updateProject(i, "stack", e.target.value)}
+                    placeholder="e.g. Next.js, TailwindCSS, Supabase"
+                  />
+                  <small className="helper-text">💡 Pisahkan dengan tanda koma.</small>
+                </label>
+
+                <div className="input-group">
+                  <label>
+                    <span className="label-text">Demo URL</span>
+                    <input
+                      value={p.demoUrl}
+                      onChange={e => updateProject(i, "demoUrl", e.target.value)}
+                      placeholder="https://example.com"
+                    />
+                  </label>
+                  <label>
+                    <span className="label-text">Repository URL</span>
+                    <input
+                      value={p.repoUrl}
+                      onChange={e => updateProject(i, "repoUrl", e.target.value)}
+                      placeholder="https://github.com/..."
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <hr />
+
+        {/* === Work Experience Section === */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>Work Experiences</h3>
+            <button type="button" className="btn-add" onClick={addWork}>
+              + Add Experience
+            </button>
+          </div>
+
+          <div className="items-grid">
+            {workExperiences.map((w, i) => (
+              <div key={i} className="box card-item">
+                <div className="item-header">
+                  <h4>Experience #{i + 1}</h4>
+                  <button type="button" className="btn-remove" onClick={() => removeWork(i)}>
+                    Remove
+                  </button>
+                </div>
+
+                <div className="input-group">
+                  <label>
+                    <span className="label-text">Company Name</span>
+                    <input
+                      value={w.companyName}
+                      onChange={e => updateWork(i, "companyName", e.target.value)}
+                      placeholder="e.g. PT. Teknologi Maju"
+                    />
+                  </label>
+                  <label>
+                    <span className="label-text">Year Range</span>
+                    <input
+                      value={w.yearRange}
+                      onChange={e => updateWork(i, "yearRange", e.target.value)}
+                      placeholder="e.g. 2022 - Present"
+                    />
+                  </label>
+                </div>
+
+                <label>
+                  <span className="label-text">Position</span>
+                  <input
+                    value={w.position}
+                    onChange={e => updateWork(i, "position", e.target.value)}
+                    placeholder="e.g. Senior Frontend Engineer"
+                  />
+                </label>
+
+                <label>
+                  <span className="label-text">Job Desk / Responsibilities</span>
+                  <textarea
+                    value={w.jobdesk}
+                    onChange={e => updateWork(i, "jobdesk", e.target.value)}
+                    placeholder="List your key contributions and responsibilities..."
+                    rows={3}
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-actions">
+          <button type="submit" className="btn-submit">Save Changes</button>
+          {statusMessage && <p className="status-text">{statusMessage}</p>}
+        </div>
       </form>
     </main>
   );
