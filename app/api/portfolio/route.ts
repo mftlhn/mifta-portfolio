@@ -41,7 +41,8 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     // 1. PROTEKSI KEAMANAN: Cek Session/Cookie Login
-    // const authCookie = request.cookies.get("sb-access-token")?.value || request.cookies.get("session")?.value;
+    // const authCookie = request.cookies.get("sb-access-token")?.value || 
+    //                    request.cookies.get("session")?.value;
     
     // if (!authCookie) {
     //   return NextResponse.json(
@@ -50,19 +51,21 @@ export async function PUT(request: NextRequest) {
     //   );
     // }
 
-    // 2. PARSING & VALIDASI BODY REQ
-    const body = (await request.json()) as { content?: Partial<PortfolioContent> };
-    if (!body || !body.content) {
-      return NextResponse.json({ message: "Payload tidak ditemukan" }, { status: 400 });
+    // 2. AMANKAN PARSING JSON (Mencegah crash di Production)
+    let body: any;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json({ message: "Format JSON tidak valid atau body kosong" }, { status: 400 });
     }
 
-    const safeContent = hydratePortfolioContent(body.content);
+    // Pastikan properti content ada, jika tidak ada gunakan objek kosong agar hydrate tidak crash
+    const rawContent = body?.content || {};
+    const safeContent = hydratePortfolioContent(rawContent);
 
     // 3. OPERASI KE DATABASE SUPABASE
     const supabase = getSupabaseClient();
     
-    // Kita HANYA mengirim id dan content. 
-    // Kolom updated_at akan otomatis terisi oleh fungsi now() di Supabase.
     const { error } = await supabase.from("portfolio_content").upsert(
       {
         id: 1,
@@ -72,14 +75,17 @@ export async function PUT(request: NextRequest) {
     );
 
     if (error) {
-      // 📝 CATATAN: Cek pesan ini di TERMINAL VS Code tempat kamu menjalankan 'npm run dev'
-      console.error("🔴 DETAIL ERROR SUPABASE:", error);
-      return NextResponse.json({ message: `Gagal menyimpan: ${error.message}` }, { status: 500 });
+      console.error("🔴 Supabase Error:", error.message);
+      return NextResponse.json({ message: `Gagal menyimpan ke database: ${error.message}` }, { status: 500 });
     }
 
     return NextResponse.json({ message: "Saved", content: safeContent });
-  } catch (err) {
-    console.error("🔴 RUNTIME ERROR:", err);
-    return NextResponse.json({ message: "Invalid request" }, { status: 400 });
+  } catch (err: any) {
+    // Menampilkan pesan error asli ke response API agar bisa kamu baca langsung di Network Tab Production
+    console.error("🔴 Runtime Error:", err);
+    return NextResponse.json(
+      { message: `Terjadi kesalahan internal: ${err?.message || "Unknown error"}` }, 
+      { status: 500 }
+    );
   }
 }
