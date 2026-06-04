@@ -65,6 +65,7 @@ export default function CmsPage() {
   const [workExperiences, setWorkExperiences] = useState(
     defaultPortfolioContent.workExperiences
   );
+  const [imageUrlsRaw, setImageUrlsRaw] = useState<Record<number, string>>({});
   const [statusMessage, setStatusMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -95,12 +96,26 @@ export default function CmsPage() {
 
     fetch("/api/portfolio")
       .then(res => res.json())
+      // .then(data => {
+      //   const hydrated = hydratePortfolioContent(data.content);
+      //   setFormState(hydrated);
+      //   setSkillsRaw((hydrated.skills || []).join(", "));
+      //   setProjects(hydrated.projects || []);
+      //   setWorkExperiences(hydrated.workExperiences || []);
+      // })
       .then(data => {
         const hydrated = hydratePortfolioContent(data.content);
         setFormState(hydrated);
         setSkillsRaw((hydrated.skills || []).join(", "));
         setProjects(hydrated.projects || []);
         setWorkExperiences(hydrated.workExperiences || []);
+
+        // reset imageUrlsRaw
+        const rawMap: Record<number, string> = {};
+        (hydrated.projects || []).forEach((p, i) => {
+          rawMap[i] = (p.imageUrls ?? []).join(", ");
+        });
+        setImageUrlsRaw(rawMap);
       })
       .catch(() => {
         setFormState(defaultPortfolioContent);
@@ -137,7 +152,7 @@ export default function CmsPage() {
                 key === "stack"
                   ? value.split(",").map(s => s.trim()).filter(Boolean)
                   : key === "imageUrls"
-                  ? value.split("\n").map(s => s.trim()).filter(Boolean)
+                  ? value.split(/[,;]/).map(s => s.trim()).filter(Boolean) // ← split koma atau titik koma
                   : value
             }
           : p
@@ -451,7 +466,7 @@ export default function CmsPage() {
                         )}
                       </div>
 
-                      <div className="space-y-2">
+                      {/* <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <Label>Image URLs</Label>
                           <Tooltip>
@@ -468,7 +483,54 @@ export default function CmsPage() {
                           onChange={e =>
                             updateProject(i, "imageUrls", e.target.value)
                           }
+                          onKeyDown={e => {
+                            if (e.key === "Enter") {
+                              e.stopPropagation(); // mencegah form submit
+                            }
+                          }}
                           placeholder={"https://res.cloudinary.com/...\nhttps://res.cloudinary.com/..."}
+                          rows={4}
+                        />
+                        {(p.imageUrls ?? []).length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {(p.imageUrls ?? []).map((url, j) => (
+                              <img
+                                key={j}
+                                src={url}
+                                alt={`preview-${j}`}
+                                style={{
+                                  width: 64, height: 48,
+                                  objectFit: "cover",
+                                  borderRadius: 6,
+                                  border: "1.5px solid #e2e8f0"
+                                }}
+                                onError={e => (e.currentTarget.style.display = "none")}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div> */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Label>Image URLs</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Pisahkan setiap URL dengan koma atau titik koma</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Textarea
+                          value={imageUrlsRaw[i] ?? (p.imageUrls ?? []).join(", ")}
+                          onChange={e => {
+                            setImageUrlsRaw(prev => ({ ...prev, [i]: e.target.value }));
+                          }}
+                          onBlur={e => {
+                            updateProject(i, "imageUrls", e.target.value);
+                          }}
+                          placeholder="https://res.cloudinary.com/..., https://res.cloudinary.com/..."
                           rows={3}
                         />
                         {(p.imageUrls ?? []).length > 0 && (
