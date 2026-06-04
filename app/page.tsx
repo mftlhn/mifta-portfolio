@@ -576,7 +576,39 @@ export default function PortfolioPage() {
                         {experience.companyName}
                       </p>
                       <p style={{ fontSize: 14, color: "#444", lineHeight: 1.65, margin: 0 }}>
-                        {experience.jobdesk}
+                        {experience.jobdesk.split("\n").map((line, i) => {
+                          const trimmed = line.trim();
+                          if (!trimmed) return null;
+
+                          // Numbered list: "1. xxx"
+                          const numberedMatch = trimmed.match(/^(\d+)\.\s+(.+)/);
+                          if (numberedMatch) {
+                            return (
+                              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4, paddingLeft: 16 }}>
+                                <span style={{ fontWeight: 700, minWidth: 18 }}>{numberedMatch[1]}.</span>
+                                <span>{numberedMatch[2]}</span>
+                              </div>
+                            );
+                          }
+
+                          // Bullet/dash: "- xxx"
+                          const bulletMatch = trimmed.match(/^[-•]\s+(.+)/);
+                          if (bulletMatch) {
+                            return (
+                              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+                                <span style={{ fontWeight: 700 }}>–</span>
+                                <span>{bulletMatch[1]}</span>
+                              </div>
+                            );
+                          }
+
+                          // Regular line
+                          return (
+                            <div key={i} style={{ marginBottom: 6 }}>
+                              <span>{trimmed}</span>
+                            </div>
+                          );
+                        })}
                       </p>
                     </div>
                   </div>
