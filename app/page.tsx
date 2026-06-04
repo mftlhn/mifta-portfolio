@@ -46,7 +46,54 @@ export default function PortfolioPage() {
     return () => controller.abort();
   }, []);
 
+  function AutoCarousel({ images }: { images: string[] }) {
+    const [current, setCurrent] = useState(0);
 
+    useEffect(() => {
+      if (images.length <= 1) return;
+      const interval = setInterval(() => {
+        setCurrent(prev => (prev + 1) % images.length);
+      }, 3000); // ganti angka ini untuk kecepatan slide (ms)
+      return () => clearInterval(interval);
+    }, [images.length]);
+
+    return (
+      <div style={{ position: "relative", width: "100%", height: 180, overflow: "hidden" }}>
+        {images.map((src, idx) => (
+          <img
+            key={idx}
+            src={src}
+            alt={`project-image-${idx}`}
+            style={{
+              position: "absolute",
+              top: 0, left: 0,
+              width: "100%", height: "100%",
+              objectFit: "cover",
+              opacity: idx === current ? 1 : 0,
+              transition: "opacity 0.8s ease-in-out",
+            }}
+          />
+        ))}
+        {/* Dot indicator */}
+        {images.length > 1 && (
+          <div style={{
+            position: "absolute", bottom: 8, left: 0, right: 0,
+            display: "flex", justifyContent: "center", gap: 5
+          }}>
+            {images.map((_, idx) => (
+              <div key={idx} style={{
+                width: idx === current ? 16 : 6,
+                height: 6,
+                borderRadius: 999,
+                background: idx === current ? "#fff" : "rgba(255,255,255,0.5)",
+                transition: "all 0.3s ease",
+              }} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // ===== SCROLL REVEAL for experience items =====
   useEffect(() => {
@@ -482,21 +529,19 @@ export default function PortfolioPage() {
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
-              {content.projects.map((project, i) => {
+              {/* {content.projects.map((project, i) => {
                 const accentBgs = ["#FFF0D6", "#E0F7F4", "#FFE8EF"];
                 const accentBorders = ["var(--saw-yellow)", "var(--saw-teal)", "var(--saw-pink)"];
                 const accent = accentBorders[i % 3];
                 const accentBg = accentBgs[i % 3];
                 return (
                   <div key={project.name} className="project-card">
-                    {/* colored top strip */}
                     <div style={{ height: 10, background: accent }} />
                     <div style={{ padding: "20px 22px 22px", flex: 1, display: "flex", flexDirection: "column" }}>
                       <h3 style={{ fontSize: 18, fontWeight: 800, margin: "0 0 8px" }}>{project.name}</h3>
                       <p style={{ fontSize: 14, color: "#555", lineHeight: 1.6, flex: 1, marginBottom: 14 }}>
                         {project.description}
                       </p>
-                      {/* stack */}
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
                         {project.stack.map((tech) => (
                           <span key={tech} style={{
@@ -510,8 +555,7 @@ export default function PortfolioPage() {
                           </span>
                         ))}
                       </div>
-                      {/* links */}
-                      {/* <div style={{ display: "flex", gap: 10 }}>
+                      <div style={{ display: "flex", gap: 10 }}>
                         {project.demoUrl && (
                           <a href={project.demoUrl} target="_blank" rel="noreferrer"
                             className="saw-btn saw-btn-yellow"
@@ -526,7 +570,44 @@ export default function PortfolioPage() {
                             <FaGithub size={13} /> Repo
                           </a>
                         )}
-                      </div> */}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })} */}
+              {content.projects.map((project, i) => {
+                const accentBgs = ["#FFF0D6", "#E0F7F4", "#FFE8EF"];
+                const accentBorders = ["var(--saw-yellow)", "var(--saw-teal)", "var(--saw-pink)"];
+                const accent = accentBorders[i % 3];
+                const accentBg = accentBgs[i % 3];
+
+                return (
+                  <div key={project.name} className="project-card">
+                    {/* Auto Carousel */}
+                    {project.imageUrls && project.imageUrls.length > 0 && (
+                      <AutoCarousel images={project.imageUrls} />
+                    )}
+
+                    {/* colored top strip */}
+                    <div style={{ height: 10, background: accent }} />
+                    <div style={{ padding: "20px 22px 22px", flex: 1, display: "flex", flexDirection: "column" }}>
+                      <h3 style={{ fontSize: 18, fontWeight: 800, margin: "0 0 8px" }}>{project.name}</h3>
+                      <p style={{ fontSize: 14, color: "#555", lineHeight: 1.6, flex: 1, marginBottom: 14 }}>
+                        {project.description}
+                      </p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                        {project.stack.map((tech) => (
+                          <span key={tech} style={{
+                            fontSize: 12, fontWeight: 700,
+                            background: accentBg,
+                            border: `1.5px solid ${accent}`,
+                            borderRadius: 6, padding: "2px 10px",
+                            color: "#111"
+                          }}>
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );
@@ -575,12 +656,11 @@ export default function PortfolioPage() {
                       <p style={{ fontSize: 13, fontWeight: 800, color: "#666", margin: "0 0 10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                         {experience.companyName}
                       </p>
-                      <p style={{ fontSize: 14, color: "#444", lineHeight: 1.65, margin: 0 }}>
+                      <div style={{ fontSize: 14, color: "#444", lineHeight: 1.65, margin: 0 }}>
                         {experience.jobdesk.split("\n").map((line, i) => {
                           const trimmed = line.trim();
                           if (!trimmed) return null;
 
-                          // Numbered list: "1. xxx"
                           const numberedMatch = trimmed.match(/^(\d+)\.\s+(.+)/);
                           if (numberedMatch) {
                             return (
@@ -591,7 +671,6 @@ export default function PortfolioPage() {
                             );
                           }
 
-                          // Bullet/dash: "- xxx"
                           const bulletMatch = trimmed.match(/^[-•]\s+(.+)/);
                           if (bulletMatch) {
                             return (
@@ -602,14 +681,13 @@ export default function PortfolioPage() {
                             );
                           }
 
-                          // Regular line
                           return (
                             <div key={i} style={{ marginBottom: 6 }}>
                               <span>{trimmed}</span>
                             </div>
                           );
                         })}
-                      </p>
+                      </div>
                     </div>
                   </div>
                 </div>

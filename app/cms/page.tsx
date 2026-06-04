@@ -136,6 +136,8 @@ export default function CmsPage() {
               [key]:
                 key === "stack"
                   ? value.split(",").map(s => s.trim()).filter(Boolean)
+                  : key === "imageUrls"
+                  ? value.split("\n").map(s => s.trim()).filter(Boolean)
                   : value
             }
           : p
@@ -444,6 +446,46 @@ export default function CmsPage() {
                               <Badge key={j} variant="secondary" className="text-xs">
                                 {tech}
                               </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Label>Image URLs</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Satu URL per baris. Gunakan Cloudinary atau link gambar langsung.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Textarea
+                          value={(p.imageUrls ?? []).join("\n")}
+                          onChange={e =>
+                            updateProject(i, "imageUrls", e.target.value)
+                          }
+                          placeholder={"https://res.cloudinary.com/...\nhttps://res.cloudinary.com/..."}
+                          rows={3}
+                        />
+                        {(p.imageUrls ?? []).length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {(p.imageUrls ?? []).map((url, j) => (
+                              <img
+                                key={j}
+                                src={url}
+                                alt={`preview-${j}`}
+                                style={{
+                                  width: 64, height: 48,
+                                  objectFit: "cover",
+                                  borderRadius: 6,
+                                  border: "1.5px solid #e2e8f0"
+                                }}
+                                onError={e => (e.currentTarget.style.display = "none")}
+                              />
                             ))}
                           </div>
                         )}

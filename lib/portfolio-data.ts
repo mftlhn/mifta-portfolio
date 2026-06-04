@@ -4,6 +4,7 @@ export type ProjectItem = {
   stack: string[];
   demoUrl: string;
   repoUrl: string;
+  imageUrls?: string[]; // ← tambahkan ini
 };
 
 export type WorkExperienceItem = {
