@@ -24,6 +24,7 @@ import {
   ChevronDown,
   GitBranch
 } from "lucide-react";
+import { FaGithub } from "react-icons/fa";
 
 export default function PortfolioPage() {
   const [content, setContent] = useState<PortfolioContent>(defaultPortfolioContent);
@@ -510,7 +511,7 @@ export default function PortfolioPage() {
                         ))}
                       </div>
                       {/* links */}
-                      <div style={{ display: "flex", gap: 10 }}>
+                      {/* <div style={{ display: "flex", gap: 10 }}>
                         {project.demoUrl && (
                           <a href={project.demoUrl} target="_blank" rel="noreferrer"
                             className="saw-btn saw-btn-yellow"
@@ -522,10 +523,10 @@ export default function PortfolioPage() {
                           <a href={project.repoUrl} target="_blank" rel="noreferrer"
                             className="saw-btn saw-btn-white"
                             style={{ flex: 1, justifyContent: "center", fontSize: 13, padding: "8px 12px" }}>
-                            <GitBranch size={13} /> Repo
+                            <FaGithub size={13} /> Repo
                           </a>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 );
