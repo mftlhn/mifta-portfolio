@@ -1,6 +1,6 @@
 // Simple auth utilities for CMS access
 const CMS_COOKIE_NAME = "cms_session";
-const CMS_PASSWORD = process.env.CMS_PASSWORD || "admin123";
+const CMS_PASSWORD = process.env.CMS_PASSWORD || "KMZWAY87AA";
 
 export function validateCmsPassword(password: string): boolean {
   return password === CMS_PASSWORD;
