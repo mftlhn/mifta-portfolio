@@ -7,8 +7,9 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "Portfolio - Fullstack Web Developer",
-  description: "Portfolio fullstack web developer: PHP, JavaScript, Dart, Flutter, Laravel, React.js, Next.js"
+  title: "Miftakhussolikhin's Portfolio",
+  // title: "MIFTAKHUSSOLIKHIN PORTFOLIO",
+  description: "Miftakhussolikhin's Portfolio - A showcase of my projects, skills, and experience as a software developer. Explore my work and get in touch!",
 };
 
 type RootLayoutProps = {

@@ -33,6 +33,7 @@ export default function PortfolioPage() {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [contactStatus, setContactStatus] = useState<"idle" | "success" | "error">("idle");
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -94,6 +95,13 @@ export default function PortfolioPage() {
       </div>
     );
   }
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // ===== SCROLL REVEAL for experience items =====
   useEffect(() => {
@@ -465,7 +473,7 @@ export default function PortfolioPage() {
               <div className="hero-img-outer">
                 <div className="hero-img-wrap">
                   <Image
-                    src="/assets/profile.jpg"
+                    src={isMobile ? "/assets/profile_square.JPG" : "/assets/profile.jpg"}
                     alt={`Foto profil ${content.fullName}`}
                     width={260} height={360}
                     style={{ objectFit: "cover", width: "100%", height: "100%" }}
@@ -486,7 +494,14 @@ export default function PortfolioPage() {
                   <MapPin size={14} />
                   {content.location}
                 </div>
-                <p style={{ fontSize: 15, lineHeight: 1.65, color: "#444", marginBottom: 16, maxWidth: 480 }}>
+                <p style={{ 
+                  fontSize: 15, 
+                  lineHeight: 1.65, 
+                  color: "#444", 
+                  marginBottom: 16, 
+                  maxWidth: 480,
+                  whiteSpace: "pre-line"  // ← tambah ini
+                }}>
                   {content.summary}
                 </p>
 
@@ -507,7 +522,7 @@ export default function PortfolioPage() {
                     View Projects →
                   </a>
                   <a href="#contact" className="saw-btn saw-btn-teal" onClick={(e) => handleNavClick(e, "contact")}>
-                    <Mail size={16} /> Send Email
+                    <Mail size={16} /> Hire Me
                   </a>
                 </div>
               </div>
@@ -526,55 +541,12 @@ export default function PortfolioPage() {
             <div style={{ marginBottom: 32 }}>
               <span className="saw-section-label">Projects</span>
               <h2 style={{ fontSize: 30, fontWeight: 900, margin: "4px 0 0" }}>What I've built</h2>
+              <p style={{ fontSize: 15, color: "#666", lineHeight: 1.65, maxWidth: 520, margin: 0 }}>
+                A collection of projects I've built — from client work to personal experiments.
+              </p>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
-              {/* {content.projects.map((project, i) => {
-                const accentBgs = ["#FFF0D6", "#E0F7F4", "#FFE8EF"];
-                const accentBorders = ["var(--saw-yellow)", "var(--saw-teal)", "var(--saw-pink)"];
-                const accent = accentBorders[i % 3];
-                const accentBg = accentBgs[i % 3];
-                return (
-                  <div key={project.name} className="project-card">
-                    <div style={{ height: 10, background: accent }} />
-                    <div style={{ padding: "20px 22px 22px", flex: 1, display: "flex", flexDirection: "column" }}>
-                      <h3 style={{ fontSize: 18, fontWeight: 800, margin: "0 0 8px" }}>{project.name}</h3>
-                      <p style={{ fontSize: 14, color: "#555", lineHeight: 1.6, flex: 1, marginBottom: 14 }}>
-                        {project.description}
-                      </p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
-                        {project.stack.map((tech) => (
-                          <span key={tech} style={{
-                            fontSize: 12, fontWeight: 700,
-                            background: accentBg,
-                            border: `1.5px solid ${accent}`,
-                            borderRadius: 6, padding: "2px 10px",
-                            color: "#111"
-                          }}>
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                      <div style={{ display: "flex", gap: 10 }}>
-                        {project.demoUrl && (
-                          <a href={project.demoUrl} target="_blank" rel="noreferrer"
-                            className="saw-btn saw-btn-yellow"
-                            style={{ flex: 1, justifyContent: "center", fontSize: 13, padding: "8px 12px" }}>
-                            <ExternalLink size={13} /> Demo
-                          </a>
-                        )}
-                        {project.repoUrl && (
-                          <a href={project.repoUrl} target="_blank" rel="noreferrer"
-                            className="saw-btn saw-btn-white"
-                            style={{ flex: 1, justifyContent: "center", fontSize: 13, padding: "8px 12px" }}>
-                            <FaGithub size={13} /> Repo
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })} */}
               {content.projects.map((project, i) => {
                 const accentBgs = ["#FFF0D6", "#E0F7F4", "#FFE8EF"];
                 const accentBorders = ["var(--saw-yellow)", "var(--saw-teal)", "var(--saw-pink)"];
@@ -620,7 +592,7 @@ export default function PortfolioPage() {
         <section id="experience" style={{ padding: "64px 24px", background: "#E8FAF7" }}>
           <div style={{ maxWidth: 920, margin: "0 auto" }}>
             <div style={{ marginBottom: 40, textAlign: "center" }}>
-              <span className="saw-section-label">Work Experience</span>
+              <span className="saw-section-label">Career History</span>
               <h2 style={{ fontSize: 30, fontWeight: 900, margin: "8px 0 0" }}>Where I've worked</h2>
             </div>
 
@@ -700,10 +672,10 @@ export default function PortfolioPage() {
         <section id="contact" style={{ padding: "64px 24px", background: "#FFF0F5" }}>
           <div style={{ maxWidth: 520, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
-              <span className="saw-section-label">Contact</span>
-              <h2 style={{ fontSize: 30, fontWeight: 900, margin: "4px 0 8px" }}>Hubungi saya!</h2>
+              <span className="saw-section-label">Get In Touch</span>
+              <h2 style={{ fontSize: 30, fontWeight: 900, margin: "4px 0 8px" }}>Let's Work Together</h2>
               <p style={{ color: "#666", fontSize: 15 }}>
-                Isi form di bawah. Saya akan segera membalas pesanmu!
+                Have a project in mind? Let's talk.
               </p>
             </div>
 
@@ -716,16 +688,16 @@ export default function PortfolioPage() {
                   borderRadius: 12, boxShadow: "3px 3px 0 var(--saw-teal)"
                 }}>
                   <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
-                  <h3 style={{ fontSize: 20, fontWeight: 900, margin: "0 0 8px" }}>Pesan Terkirim!</h3>
+                  <h3 style={{ fontSize: 20, fontWeight: 900, margin: "0 0 8px" }}>Message Sent!</h3>
                   <p style={{ color: "#555", fontSize: 14, marginBottom: 20 }}>
-                    Terima kasih sudah menghubungi. Saya akan segera membalas!
+                    Thank you for contacting me. I will get back to you soon!
                   </p>
                   <button
                     onClick={() => setContactStatus("idle")}
                     className="saw-btn saw-btn-teal"
                     style={{ fontSize: 14, padding: "8px 20px" }}
                   >
-                    Kirim Pesan Lagi
+                    Send Message Again
                   </button>
                 </div>
               )}
@@ -741,7 +713,7 @@ export default function PortfolioPage() {
                       className="saw-input"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Nama lengkap kamu"
+                      placeholder="Your Name"
                       required
                       disabled={isSending}
                     />
@@ -755,7 +727,7 @@ export default function PortfolioPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="email@kamu.com"
+                      placeholder="your.email@example.com"
                       required
                       disabled={isSending}
                     />
@@ -769,7 +741,7 @@ export default function PortfolioPage() {
                       rows={5}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Tulis pesanmu di sini..."
+                      placeholder="Tell me about your project..."
                       required
                       disabled={isSending}
                       style={{ resize: "vertical" }}
@@ -784,7 +756,7 @@ export default function PortfolioPage() {
                       fontSize: 13, fontWeight: 700, color: "#c0003c",
                       boxShadow: "2px 2px 0 var(--saw-pink)"
                     }}>
-                      ❌ Gagal mengirim pesan. Coba lagi beberapa saat.
+                      ❌ Failed to send message. Please try again later.
                     </div>
                   )}
 
@@ -805,10 +777,10 @@ export default function PortfolioPage() {
                           border: "2.5px solid #111", borderTopColor: "transparent",
                           borderRadius: "50%", animation: "spin 0.7s linear infinite"
                         }} />
-                        Mengirim...
+                        Sending...
                       </>
                     ) : (
-                      <><Send size={16} /> Kirim Pesan</>
+                      <><Send size={16} /> Send Message</>
                     )}
                   </button>
                 </form>

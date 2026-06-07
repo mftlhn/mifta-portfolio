@@ -55,7 +55,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-muted/30 flex items-center justify-center px-4">
       {/* subtle background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-muted/20 pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-muted/20 pointer-events-none" />
 
       <div className="relative w-full max-w-sm space-y-4">
         {/* Icon */}
