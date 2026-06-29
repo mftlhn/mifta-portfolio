@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateCmsPassword, generateSessionToken } from "@/lib/auth";
+import { CMS_COOKIE_NAME, generateSessionToken, validateCmsPassword } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const response = NextResponse.json({ message: "Login successful." }, { status: 200 });
-    response.cookies.set("cms_session", generateSessionToken(), {
+    response.cookies.set(CMS_COOKIE_NAME, generateSessionToken(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

@@ -707,7 +707,7 @@ export default function PortfolioPage() {
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                   <div>
                     <label style={{ display: "block", fontWeight: 800, fontSize: 14, marginBottom: 6 }}>
-                      Nama
+                      Name
                     </label>
                     <input
                       className="saw-input"
@@ -734,7 +734,7 @@ export default function PortfolioPage() {
                   </div>
                   <div>
                     <label style={{ display: "block", fontWeight: 800, fontSize: 14, marginBottom: 6 }}>
-                      Pesan
+                      Message
                     </label>
                     <textarea
                       className="saw-input"

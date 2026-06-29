@@ -4,7 +4,7 @@ export type ProjectItem = {
   stack: string[];
   demoUrl: string;
   repoUrl: string;
-  imageUrls?: string[]; // ← tambahkan ini
+  imageUrls: string[]; // ← tambahkan ini
 };
 
 export type WorkExperienceItem = {
@@ -42,7 +42,8 @@ export const defaultPortfolioContent: PortfolioContent = {
         "Aplikasi manajemen produk, pesanan, dan laporan penjualan untuk bisnis retail skala menengah.",
       stack: ["Laravel", "MySQL", "React.js"],
       demoUrl: "https://example.com",
-      repoUrl: "https://github.com/username/project-1"
+      repoUrl: "https://github.com/username/project-1",
+      imageUrls: [],
     },
     {
       name: "Dashboard Analytics Performa Marketing",
@@ -50,7 +51,8 @@ export const defaultPortfolioContent: PortfolioContent = {
         "Dashboard interaktif untuk memantau metrik campaign dan menghasilkan insight secara real-time.",
       stack: ["Next.js", "TypeScript", "PostgreSQL"],
       demoUrl: "https://example.com",
-      repoUrl: "https://github.com/username/project-2"
+      repoUrl: "https://github.com/username/project-2",
+      imageUrls: [],
     },
     {
       name: "Aplikasi Mobile Booking Service",
@@ -58,7 +60,8 @@ export const defaultPortfolioContent: PortfolioContent = {
         "Aplikasi mobile cross-platform dengan sistem booking, notifikasi, dan riwayat transaksi.",
       stack: ["Flutter", "Dart", "Laravel API"],
       demoUrl: "https://example.com",
-      repoUrl: "https://github.com/username/project-3"
+      repoUrl: "https://github.com/username/project-3",
+      imageUrls: [],
     }
   ],
   workExperiences: [

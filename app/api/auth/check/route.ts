@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAuthenticated } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
-  const sessionCookie = request.cookies.get("cms_session");
-
-  if (!sessionCookie || !sessionCookie.value) {
+  if (!isAuthenticated(request)) {
     return NextResponse.json({ message: "Unauthorized." }, { status: 401 });
   }
 
