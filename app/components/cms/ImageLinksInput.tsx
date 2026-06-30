@@ -1,32 +1,31 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, Trash2, ImageIcon } from "lucide-react";
+import { ImageIcon, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type ImageLinksInputProps = {
+type Props = {
   label?: string;
   value: string[];
   onChange: (value: string[]) => void;
 };
 
 export default function ImageLinksInput({
-  label = "Images",
+  label = "Project Images",
   value,
   onChange,
-}: ImageLinksInputProps) {
+}: Props) {
   const addImage = () => {
     onChange([...value, ""]);
   };
 
   const updateImage = (index: number, url: string) => {
-    const newImages = [...value];
-    newImages[index] = url;
-    onChange(newImages);
+    const images = [...value];
+    images[index] = url;
+    onChange(images);
   };
 
   const removeImage = (index: number) => {
@@ -36,36 +35,59 @@ export default function ImageLinksInput({
   return (
     <div className="space-y-4">
 
-      <div className="space-y-1">
+      <div className="flex items-center justify-between">
+
         <Label>{label}</Label>
 
-        <p className="text-sm text-muted-foreground">
-          Masukkan URL gambar Cloudinary.
-        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={addImage}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Image
+        </Button>
+
       </div>
 
-      <div className="space-y-4">
+      {value.length === 0 && (
+        <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+          No images yet.
+        </div>
+      )}
 
-        {value.length === 0 && (
-          <Card className="p-6 border-dashed text-center">
-
-            <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-
-            <p className="text-sm text-muted-foreground">
-              Belum ada gambar
-            </p>
-
-          </Card>
-        )}
+      <div className="space-y-3">
 
         {value.map((url, index) => (
 
-          <Card
+          <div
             key={index}
-            className="p-4 space-y-4"
+            className="flex items-center gap-4 rounded-lg border p-3"
           >
 
-            <div className="flex gap-2">
+            {/* Thumbnail */}
+
+            <div className="flex h-20 w-28 items-center justify-center overflow-hidden rounded-md border bg-muted">
+
+              {url ? (
+                <Image
+                  src={url}
+                  alt={`Image ${index + 1}`}
+                  width={120}
+                  height={80}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+              )}
+
+            </div>
+
+            {/* URL */}
+
+            <div className="flex-1">
 
               <Input
                 placeholder="https://res.cloudinary.com/..."
@@ -75,45 +97,24 @@ export default function ImageLinksInput({
                 }
               />
 
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                onClick={() => removeImage(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-
             </div>
 
-            {url && (
-              <div className="relative overflow-hidden rounded-lg border aspect-video">
+            {/* Delete */}
 
-                <Image
-                  src={url}
-                  alt={`Preview ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              onClick={() => removeImage(index)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
 
-              </div>
-            )}
-
-          </Card>
+          </div>
 
         ))}
 
       </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        onClick={addImage}
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Image
-      </Button>
 
     </div>
   );
